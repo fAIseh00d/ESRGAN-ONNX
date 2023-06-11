@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 import onnxruntime
 import time
-
+import multiprocessing as mp
 
 class ESRGAN:
 
@@ -64,11 +64,13 @@ class ESRGAN:
 
 
     def _init_model(self):
-        self.exec_provider = 'DmlExecutionProvider' # 'CPUExecutionProvider' 'DmlExecutionProvider'
+        self.exec_provider = ['CPUExecutionProvider'] # 'CPUExecutionProvider' 'DmlExecutionProvider'
         self.session_opti = onnxruntime.SessionOptions()
-        self.session_opti.enable_mem_pattern = False
-        self.session = onnxruntime.InferenceSession(self.model_path, self.session_opti)
-        self.session.set_providers([self.exec_provider])
+        self.use_num_cpus = mp.cpu_count()-1
+        self.session_opti.intra_op_num_threads = int(self.use_num_cpus/3)
+        #self.session_opti.enable_mem_pattern = False
+        self.session = onnxruntime.InferenceSession(self.model_path, self.session_opti, providers=self.exec_provider)
+        #self.session.set_providers([self.exec_provider])
         self.model_input = self.session.get_inputs()[0].name
         return self.session, self.model_input
 
