@@ -83,10 +83,10 @@ class ESRGAN:
         return self._into_whole(output_tiles)
 
 
-using_model_path = 'models/JPEG_Denoise/1x_JPEG_60-80-opti.onnx'
+using_model_path = 'D:/refacer/TGHQFace8x_500k-fp32.onnx'
 input_path = sys.argv[1]
 print('Init....')
-model = ESRGAN(using_model_path, tile_size=1024, scale=1)
+model = ESRGAN(using_model_path, tile_size=1024, scale=8)
 start_time = time.time()
 result = model.get_result(input_path)
 result.save(f'{input_path}.png')
