@@ -1,7 +1,5 @@
 import numpy as np
 from PIL import Image
-import onnxruntime
-import multiprocessing as mp
 
 class ESRGAN:
 
@@ -22,13 +20,9 @@ class ESRGAN:
         return norm_img_data
 
 
-    def _into_tiles(self, image_path):
-        try:
-            img = Image.open(image_path).convert('RGB')
-            self.width, self.height = img.size
-        except OSError:
-            print(f'\nFile broken: {image_path}')
-            return None
+    def _into_tiles(self, image_array):
+        img = Image.fromarray(image_array).convert('RGB')
+        self.width, self.height = img.size
         tile_size = self.tile_size
         prepad = self.prepad
         self.num_width = int(np.ceil(self.width/tile_size))
@@ -58,13 +52,14 @@ class ESRGAN:
                 paste_pos = (j*scaled_tile, i*scaled_tile)
                 out_img.paste(tile.crop(box), paste_pos)
                 paste_cnt += 1
-        return out_img.crop((0, 0, self.width*self.scale, self.height*self.scale))
+        out_img = out_img.crop((0, 0, self.width*self.scale, self.height*self.scale))
+        return np.array(out_img)
 
 
 
 
-    def get(self, image_path):
-        input_tiles = self._into_tiles(image_path)
+    def get(self, image_array):
+        input_tiles = self._into_tiles(image_array)
         output_tiles = []
         for tile in input_tiles:
             result = self.session.run([], {self.model_input: tile})[0][0]
