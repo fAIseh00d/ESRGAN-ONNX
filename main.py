@@ -1,9 +1,6 @@
-import os
-import sys
 import numpy as np
 from PIL import Image
 import onnxruntime
-import time
 import multiprocessing as mp
 
 class ESRGAN:
@@ -64,7 +61,7 @@ class ESRGAN:
 
 
     def _init_model(self):
-        self.exec_provider = ['CPUExecutionProvider'] # 'CPUExecutionProvider' 'DmlExecutionProvider'
+        self.exec_provider = ['CUDAExecutionProvider', 'CPUExecutionProvider'] # 'CPUExecutionProvider' 'DmlExecutionProvider'
         self.session_opti = onnxruntime.SessionOptions()
         self.use_num_cpus = mp.cpu_count()-1
         self.session_opti.intra_op_num_threads = int(self.use_num_cpus/3)
@@ -83,13 +80,3 @@ class ESRGAN:
             result = np.clip(result.transpose(1, 2, 0), 0, 1) * 255.0
             output_tiles.append(Image.fromarray(result.round().astype(np.uint8)))
         return self._into_whole(output_tiles)
-
-
-using_model_path = 'D:/refacer/TGHQFace8x_500k-fp32.onnx'
-input_path = sys.argv[1]
-print('Init....')
-model = ESRGAN(using_model_path, tile_size=1024, scale=8)
-start_time = time.time()
-result = model.get_result(input_path)
-result.save(f'{input_path}.png')
-print(f'Result saved. Time cost: {time.time()-start_time:.4f}s')
