@@ -5,12 +5,13 @@ import multiprocessing as mp
 
 class ESRGAN:
 
-    def __init__(self, model_path, tile_size=256, prepad=10, scale=4):
-        self.model_path = model_path
+    def __init__(self, model_file=None, session=None, tile_size=128, prepad=10, scale=4):
+        self.model_file = model_file
+        self.session = session
         self.tile_size = tile_size
         self.prepad = prepad
         self.scale = scale
-        self._init_model()
+        self.model_input = self.session.get_inputs()[0].name
 
 
     def _tile_preprocess(self, img):
@@ -60,19 +61,9 @@ class ESRGAN:
         return out_img.crop((0, 0, self.width*self.scale, self.height*self.scale))
 
 
-    def _init_model(self):
-        self.exec_provider = ['CUDAExecutionProvider', 'CPUExecutionProvider'] # 'CPUExecutionProvider' 'DmlExecutionProvider'
-        self.session_opti = onnxruntime.SessionOptions()
-        self.use_num_cpus = mp.cpu_count()-1
-        self.session_opti.intra_op_num_threads = int(self.use_num_cpus/3)
-        #self.session_opti.enable_mem_pattern = False
-        self.session = onnxruntime.InferenceSession(self.model_path, self.session_opti, providers=self.exec_provider)
-        #self.session.set_providers([self.exec_provider])
-        self.model_input = self.session.get_inputs()[0].name
-        return self.session, self.model_input
 
 
-    def get_result(self, image_path):
+    def get(self, image_path):
         input_tiles = self._into_tiles(image_path)
         output_tiles = []
         for tile in input_tiles:
