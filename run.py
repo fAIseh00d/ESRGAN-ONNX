@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import onnxruntime as rt
 import multiprocessing as mp
-from main import ESRGAN
+from src.ESRGAN_ONNX import ESRGAN
 
 providers = rt.get_available_providers()
 if 'TensorrtExecutionProvider' in providers:
@@ -30,10 +30,10 @@ elif 'CUDAExecutionProvider' in providers:
 
 model_path = 'TGHQFace8x_500k-fp32.onnx'
 sess_upsk = rt.InferenceSession(model_path, sess_options, providers=providers)
-img = cv2.imread('D:/Projects/ESRGAN-ONNX/test_face.png', cv2.IMREAD_COLOR)
+img = np.full((32, 32, 3), (255, 255, 255), dtype=np.uint8)
 img_array = np.array(img)
 print('Init....')
-for tile_size in [32,48,64,96,128,158,192]:
+for tile_size in [32,48,64,96,128,160,192]:
     print('Tile size=',tile_size)
     model = ESRGAN(model_path, sess_upsk, tile_size, scale=4)
     start_time_0 = time.time()
@@ -48,4 +48,4 @@ for tile_size in [32,48,64,96,128,158,192]:
     median_time = statistics.median(time_diffs)
     print(f'Median processing time: {median_time:.4f}s')
 
-cv2.imwrite('test_face_.png', result)
+#cv2.imwrite('downloads/test.png', result)

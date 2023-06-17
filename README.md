@@ -1,7 +1,7 @@
 # ESRGAN-ONNX
 
-Implement of ESRGAN with ONNX, just only for inference.  
-You can easily try your images without installing complex machine learning enviroment.
+Implementation of ESRGAN with ONNX, only for inference.  
+You can use it in any onnxruntime project without a lot of additional dependencies.
 
 ## Installation
 
