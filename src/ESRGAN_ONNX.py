@@ -3,8 +3,7 @@ from PIL import Image
 
 class ESRGAN:
 
-    def __init__(self, model_file=None, session=None, tile_size=128, prepad=8, scale=None):
-        self.model_file = model_file
+    def __init__(self, session=None, tile_size=128, prepad=8, scale=None):
         self.session = session
         self.tile_size = tile_size
         self.prepad = prepad
@@ -12,7 +11,6 @@ class ESRGAN:
         self.model_input = self.session.get_inputs()[0].name
         if not self.scale:
             self.scale = self._get_scale()
-        print('Upscaling factor = ', self.scale)
 
 
     def _tile_preprocess(self, img):
