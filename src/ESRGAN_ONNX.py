@@ -3,13 +3,16 @@ from PIL import Image
 
 class ESRGAN:
 
-    def __init__(self, model_file=None, session=None, tile_size=128, prepad=10, scale=4):
+    def __init__(self, model_file=None, session=None, tile_size=128, prepad=8, scale=None):
         self.model_file = model_file
         self.session = session
         self.tile_size = tile_size
         self.prepad = prepad
         self.scale = scale
         self.model_input = self.session.get_inputs()[0].name
+        if not self.scale:
+            self.scale = self._get_scale()
+        print('Upscaling factor = ', self.scale)
 
 
     def _tile_preprocess(self, img):
@@ -64,3 +67,14 @@ class ESRGAN:
             result = np.clip(result.transpose(1, 2, 0), 0, 1) * 255.0
             output_tiles.append(Image.fromarray(result.round().astype(np.uint8)))
         return self._into_whole(output_tiles)
+
+    def _get_scale(self):
+        # Create a test BGR image with 1px by 1px size filled with float32 white 
+        input_temp = np.full((1, 1, 3), (1.0, 1.0, 1.0), dtype=np.float32)
+        # Transpose the dimensions of the input tensor (numpy image array to esrgan compatible image)
+        input_temp = np.transpose(input_temp, (2, 0, 1))
+        # Add a new dimension to the input tensor (batch_size)
+        input_temp = np.expand_dims(input_temp, axis=0)
+        output_temp = self.session.run([], {self.model_input: input_temp})[0][0]
+        scale_factor = int(output_temp.shape[-1]/input_temp.shape[-1])
+        return scale_factor

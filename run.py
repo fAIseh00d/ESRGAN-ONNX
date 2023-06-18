@@ -30,12 +30,14 @@ elif 'CUDAExecutionProvider' in providers:
 
 model_path = 'TGHQFace8x_500k-fp32.onnx'
 sess_upsk = rt.InferenceSession(model_path, sess_options, providers=providers)
-img = np.full((32, 32, 3), (255, 255, 255), dtype=np.uint8)
-img_array = np.array(img)
+img_array = np.full((128, 128, 3), (255, 255, 255), dtype=np.uint8)
+best_median_time = float('inf')
+best_tile_size = None
+median_times = []
 print('Init....')
 for tile_size in [32,48,64,96,128,160,192]:
     print('Tile size=',tile_size)
-    model = ESRGAN(model_path, sess_upsk, tile_size, scale=4)
+    model = ESRGAN(model_path, sess_upsk, tile_size)
     start_time_0 = time.time()
     time_diffs = []
     reps = 9
@@ -46,6 +48,11 @@ for tile_size in [32,48,64,96,128,160,192]:
         time_diffs.append(time_diff)
         #print(f'Iteration time cost: {time.time()-start_time:.4f}s')
     median_time = statistics.median(time_diffs)
+    median_times.append(median_time)
     print(f'Median processing time: {median_time:.4f}s')
 
+    if median_time < best_median_time:
+        best_median_time = median_time
+        best_tile_size = tile_size
+print(f'Best tile size: {best_tile_size}, Median processing time: {best_median_time:.4f}s')
 #cv2.imwrite('downloads/test.png', result)
