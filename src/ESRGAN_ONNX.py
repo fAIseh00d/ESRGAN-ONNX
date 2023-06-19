@@ -3,7 +3,7 @@ from PIL import Image
 
 class ESRGAN:
 
-    def __init__(self, session=None, tile_size=128, prepad=8, scale=None):
+    def __init__(self, session=None, tile_size=128, prepad=8, scale:int=None):
         self.session = session
         self.tile_size = tile_size
         self.prepad = prepad
@@ -64,7 +64,7 @@ class ESRGAN:
             result = self.session.run([], {self.model_input: tile})[0][0]
             result = np.clip(result.transpose(1, 2, 0), 0, 1) * 255.0
             output_tiles.append(Image.fromarray(result.round().astype(np.uint8)))
-        return self._into_whole(output_tiles)
+        return self._into_whole(output_tiles), self.scale_factor
 
     def _get_scale(self):
         # Create a test BGR image with 1px by 1px size filled with float32 white 
@@ -74,5 +74,5 @@ class ESRGAN:
         # Add a new dimension to the input tensor (batch_size)
         input_temp = np.expand_dims(input_temp, axis=0)
         output_temp = self.session.run([], {self.model_input: input_temp})[0][0]
-        scale_factor = int(output_temp.shape[-1]/input_temp.shape[-1])
-        return scale_factor
+        self.scale_factor = int(output_temp.shape[-1]/input_temp.shape[-1])
+        return self.scale_factor

@@ -1,4 +1,4 @@
-
+import cv2
 import time
 import statistics
 import numpy as np
@@ -8,9 +8,15 @@ from src.ESRGAN_ONNX import ESRGAN
 import argparse
 
 parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--input', type=str, default=None,
+                    help='the path to the input file')
+parser.add_argument('--output', type=str, default=None,
+                    help='the path to the output file')
+parser.add_argument('--prepad', type=int, default=8,
+                    help='padding size')
 parser.add_argument('--img_size', type=int, default=128,
-                    help='an integer representing the size of img_array')
-parser.add_argument('--model_path', type=str, default='TGHQFace8x_500k-fp32.onnx',
+                    help='an integer representing the size of img_array if no input is provided')
+parser.add_argument('--model_path', type=str, default='Face-Super-Resolution_90000_G.onnx',
                     help='the path to the ONNX model file')
 parser.add_argument('--reps', type=int, default=9,
                     help='Median repetition count')
@@ -37,19 +43,22 @@ elif 'CUDAExecutionProvider' in providers:
     print(f"CUDA mode with providers {providers}")
 
 sess_upsk = rt.InferenceSession(args.model_path, sess_options, providers=providers)
-img_array = np.full((args.img_size, args.img_size, 3), (255, 255, 255), dtype=np.uint8)
+if not args.input:
+    img_array = np.full((args.img_size, args.img_size, 3), (255, 255, 255), dtype=np.uint8)
+else:
+    img_array = np.array(cv2.imread(args.input, cv2.IMREAD_COLOR))
 best_median_time = float('inf')
 best_tile_size = None
 median_times = []
-print('Model', args.model_path, '\nImage size', args.img_size)
+print('Model', args.model_path, '\nImage size =', img_array.shape)
 for tile_size in [32,48,64,96,128,160,192]:
     print('Tile size=',tile_size)
-    model = ESRGAN(sess_upsk, tile_size)
+    model = ESRGAN(sess_upsk, tile_size, args.prepad)
     start_time_0 = time.time()
     time_diffs = []
     for i in range(args.reps):
         start_time = time.time()
-        result = model.get(img_array)
+        result = model.get(img_array)[0]
         time_diff = time.time() - start_time
         time_diffs.append(time_diff)
         #print(f'Iteration time cost: {time.time()-start_time:.4f}s')
@@ -61,3 +70,5 @@ for tile_size in [32,48,64,96,128,160,192]:
         best_median_time = median_time
         best_tile_size = tile_size
 print(f'Best tile size: {best_tile_size}, Median processing time: {best_median_time:.4f}s')
+if args.output:
+    cv2.imwrite(args.output, result)
