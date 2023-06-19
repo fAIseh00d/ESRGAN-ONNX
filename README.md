@@ -1,48 +1,50 @@
 # ESRGAN-ONNX
 
-Implementation of ESRGAN with ONNX, only for inference.  
-You can use it in any onnxruntime project without a lot of additional dependencies.
+Inference-only ONNX implementation of ESRGAN.  
+Requires minimal additional dependencies.
 
 ## Installation
 
-1. Install dependence
- > pip install numpy pillow onnxruntime  
+To install it as a package:
 
-for NVIDIA GPU
- > pip install onnxruntime-gpu  
+Choose a version of onnxruntime suitable for your hardware.  
+For CPU inference
+ > pip install onnxruntime
 
-for AMD/Intel GPU, you could download and install `onnxruntime-dml` on [release page](https://github.com/Sg4Dylan/ESRGAN-ONNX/releases) or build it follow [this](https://github.com/microsoft/onnxruntime/blob/master/BUILD.md)
+For NVIDIA GPU  
+ > pip install onnxruntime-gpu
 
-2. Download `models.7z` on [release page](https://github.com/Sg4Dylan/ESRGAN-ONNX/releases)  
-3. Unzip `models.7z` in code directory
+Install wheel from the releases.  
+ > pip install esrgan_onnx-0.1.0-py3-none-any.whl  
+
+## Usage
+
+The package only consists of 1 class, ESRGAN.  
+Object's positional arguments are onnxruntime session, tile size, padding, and manual set scale.  
+If manual scale is not set - on init it autodetects scale.  
+**get** function accepts numpy image **array[height, width, channel]**.  
 
 
-## Testing
+## Convert PyTorch models
 
-1. Modify source code  
-```
-# change model
-using_model_path = 'models/JPEG_Denoise/1x_JPEG_60-80-opti.onnx'  
-```
+I recommend [chaiNNer](https://chainner.app/)  
+Download chaiNNer and run *PyTorch2ONNX_convert.chn*  
+Sample Compact model is in releases.
 
-```
-# change execution provider
-self.exec_provider = 'CUDAExecutionProvider' # GPU via CUDA
-self.exec_provider = 'DmlExecutionProvider'  # GPU via DirectML
-self.exec_provider = 'CPUExecutionProvider'  # CPU Only
-```
+## Test run
 
-```
-# set tile size
-model = ESRGAN(using_model_path, tile_size=1024, scale=1)
-```
+To determine optimal tile size for your image:  
+ > git clone <https://github.com/fAIseh00d/ESRGAN-ONNX.git>
 
-2. Run to go
- > python main.py input.jpg
+ Put sample or your own model in the script folder  
+ > cd ESRGAN-ONNX  
+ pip install -r requirements-run.txt  
+ python run.py  
 
-## Export others pretrain model
-See this [gist](https://gist.github.com/Sg4Dylan/49d67f9b255e417d69dc19d97097982a)
+Please see parser arguments and tile_size list for reference.
 
 ## Reference
+
 1. [ESRGAN](https://github.com/xinntao/ESRGAN)
-2. [Model Database](https://upscale.wiki/wiki/Model_Database)
+2. [Model Database](https://upscale.wiki/wiki/Model_Database)  
+3. [Original ESRGAN-ONNX repo](https://github.com/Sg4Dylan/ESRGAN-ONNX)

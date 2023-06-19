@@ -16,7 +16,7 @@ parser.add_argument('--prepad', type=int, default=8,
                     help='padding size')
 parser.add_argument('--img_size', type=int, default=128,
                     help='an integer representing the size of img_array if no input is provided')
-parser.add_argument('--model_path', type=str, default='Face-Super-Resolution_90000_G.onnx',
+parser.add_argument('--model_path', type=str, default='2x_DigitalFlim_SuperUltraCompact_nf24-nc8_289k_net_g.onnx',
                     help='the path to the ONNX model file')
 parser.add_argument('--reps', type=int, default=9,
                     help='Median repetition count')
@@ -50,10 +50,11 @@ else:
 best_median_time = float('inf')
 best_tile_size = None
 median_times = []
+tile_size=[32,48,64,96,128,160,192]
 print('Model', args.model_path, '\nImage size =', img_array.shape)
-for tile_size in [32,48,64,96,128,160,192]:
-    print('Tile size=',tile_size)
-    model = ESRGAN(sess_upsk, tile_size, args.prepad)
+for tile in tile_size:
+    print('Tile size=',tile)
+    model = ESRGAN(sess_upsk, tile, args.prepad)
     start_time_0 = time.time()
     time_diffs = []
     for i in range(args.reps):
@@ -68,7 +69,7 @@ for tile_size in [32,48,64,96,128,160,192]:
 
     if median_time < best_median_time:
         best_median_time = median_time
-        best_tile_size = tile_size
+        best_tile_size = tile
 print(f'Best tile size: {best_tile_size}, Median processing time: {best_median_time:.4f}s')
 if args.output:
     cv2.imwrite(args.output, result)
